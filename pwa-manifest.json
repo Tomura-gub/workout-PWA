@@ -1,0 +1,24 @@
+{
+  "name": "柔術筋トレ管理",
+  "short_name": "筋トレ",
+  "description": "柔術のための筋トレ記録アプリ",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#2c3e50",
+  "background_color": "#ffffff",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
