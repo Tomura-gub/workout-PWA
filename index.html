@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>柔術筋トレ管理</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+        
+        .container {
+            margin-top: 70px;
+            padding: 20px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .day-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .day-btn {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #3498db;
+            background-color: white;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .day-btn.active {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .workout-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .workout-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .workout-emoji {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        
+        .warmup-section, .main-section {
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .set-item {
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .complete-btn {
+            padding: 5px 15px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .complete-btn.completed {
+            background-color: #95a5a6;
+        }
+        
+        .voice-input {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 2000;
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .modal-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .save-btn {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .cancel-btn {
+            background-color: #95a5a6;
+            color: white;
+        }
+        
+        .history-section {
+            margin-top: 40px;
+        }
+        
+        .history-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .history-item {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>柔術筋トレ管理 💪</h1>
+    </div>
+    
+    <div class="container">
+        <div class="day-selector">
+            <button class="day-btn" onclick="selectDay('A')">A日（土）</button>
+            <button class="day-btn" onclick="selectDay('B')">B日（日）</button>
+        </div>
+        
+        <div id="workoutList"></div>
+        
+        <div class="history-section">
+            <h2 class="history-title">📋 最近の記録</h2>
+            <div id="historyList"></div>
+        </div>
+    </div>
+    
+    <button class="voice-input" onclick="openRecordModal()">🎤</button>
+    
+    <div id="recordModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">トレーニング記録</h2>
+            <div class="input-group">
+                <label>種目</label>
+                <select id="exerciseSelect" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;">
+                    <option value="">選択してください</option>
+                    <option value="ケツ上げベンチプレス">🟥 ケツ上げベンチプレス</option>
+                    <option value="ケツつけベンチプレス">🟦 ケツつけベンチプレス</option>
+                    <option value="レンジ">🟨 レンジ</option>
+                    <option value="デッドリフト">🟩 デッドリフト</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>セット内容（例：80kg×5回×5セット）</label>
+                <input type="text" id="setInput" placeholder="音声入力も可能">
+            </div>
+            <div class="input-group">
+                <label>所感・メモ</label>
+                <textarea id="memoInput" rows="3" placeholder="フォームの感覚、疲労度など"></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn save-btn" onclick="saveRecord()">保存</button>
+                <button class="modal-btn cancel-btn" onclick="closeRecordModal()">キャンセル</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // PWAの基本設定
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+        
+        // データ構造
+        const workoutPlans = {
+            A: {
+                title: 'A日（土）- 動的・爆発系',
+                exercises: [
+                    {
+                        name: 'ケツ上げベンチプレス',
+                        emoji: '🟥',
+                        warmup: [
+                            'ダンベル 10kg×15回',
+                            'ダンベル 15kg×10-12回',
+                            'ダンベル 17.5kg×8-10回',
+                            'バーベル 60kg×5回（ラック使用）'
+                        ],
+                        main: '90kg×5回×5セット'
+                    },
+                    {
+                        name: 'レンジ',
+                        emoji: '🟨',
+                        warmup: [
+                            'ダンベル 8kg×12回（左右各）',
+                            'ダンベル 12kg×10回（左右各）',
+                            'ダンベル 16kg×8回（左右各）'
+                        ],
+                        main: '34kg×25回×4セット'
+                    }
+                ]
+            },
+            B: {
+                title: 'B日（日）- 安定系・フォーム強化',
+                exercises: [
+                    {
+                        name: 'ケツつけベンチプレス',
+                        emoji: '🟦',
+                        warmup: [
+                            'ダンベル 10kg×15回',
+                            'ダンベル 15kg×12回',
+                            'ダンベル 20kg×10回',
+                            'バーベル 40kg×10回（ラック使用）'
+                        ],
+                        main: '60kg×15回×5セット'
+                    },
+                    {
+                        name: 'デッドリフト',
+                        emoji: '🟩',
+                        warmup: [
+                            'スミスマシン 40kg×15回',
+                            'スミスマシン 60kg×12回',
+                            'スミスマシン 80kg×10回',
+                            'バーベル 60kg×8回'
+                        ],
+                        main: '95kg×20回（ハイレップ）'
+                    }
+                ]
+            }
+        };
+        
+        let currentDay = '';
+        let workoutHistory = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+        
+        function selectDay(day) {
+            currentDay = day;
+            document.querySelectorAll('.day-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            renderWorkouts();
+        }
+        
+        function renderWorkouts() {
+            const container = document.getElementById('workoutList');
+            if (!currentDay) {
+                container.innerHTML = '<p style="text-align: center; color: #666;">曜日を選択してください</p>';
+                return;
+            }
+            
+            const plan = workoutPlans[currentDay];
+            let html = `<h2 style="margin-bottom: 20px;">${plan.title}</h2>`;
+            
+            plan.exercises.forEach(exercise => {
+                html += `
+                    <div class="workout-card">
+                        <div class="workout-title">
+                            <span class="workout-emoji">${exercise.emoji}</span>
+                            ${exercise.name}
+                        </div>
+                        <div class="warmup-section">
+                            <div class="section-title">💪 アップメニュー</div>
+                            ${exercise.warmup.map((set, index) => `
+                                <div class="set-item">
+                                    <span>${index + 1}. ${set}</span>
+                                    <button class="complete-btn" onclick="toggleComplete(this)">完了</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="main-section">
+                            <div class="section-title">🔥 メインセット</div>
+                            <div class="set-item">
+                                <span>${exercise.main}</span>
+                                <button class="complete-btn" onclick="toggleComplete(this)">完了</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function toggleComplete(button) {
+            button.classList.toggle('completed');
+            button.textContent = button.classList.contains('completed') ? '済' : '完了';
+        }
+        
+        function openRecordModal() {
+            document.getElementById('recordModal').style.display = 'block';
+        }
+        
+        function closeRecordModal() {
+            document.getElementById('recordModal').style.display = 'none';
+            document.getElementById('exerciseSelect').value = '';
+            document.getElementById('setInput').value = '';
+            document.getElementById('memoInput').value = '';
+        }
+        
+        function saveRecord() {
+            const exercise = document.getElementById('exerciseSelect').value;
+            const sets = document.getElementById('setInput').value;
+            const memo = document.getElementById('memoInput').value;
+            
+            if (!exercise || !sets) {
+                alert('種目とセット内容を入力してください');
+                return;
+            }
+            
+            const record = {
+                date: new Date().toLocaleString('ja-JP'),
+                exercise: exercise,
+                sets: sets,
+                memo: memo
+            };
+            
+            workoutHistory.unshift(record);
+            localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+            
+            renderHistory();
+            closeRecordModal();
+            
+            // 保存成功のフィードバック
+            showNotification('記録を保存しました！');
+        }
+        
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            const recentHistory = workoutHistory.slice(0, 5);
+            
+            if (recentHistory.length === 0) {
+                container.innerHTML = '<p style="color: #666;">まだ記録がありません</p>';
+                return;
+            }
+            
+            container.innerHTML = recentHistory.map(record => `
+                <div class="history-item">
+                    <div style="font-weight: bold; margin-bottom: 5px;">${record.exercise}</div>
+                    <div style="color: #666; font-size: 14px;">${record.date}</div>
+                    <div style="margin-top: 5px;">${record.sets}</div>
+                    ${record.memo ? `<div style="color: #888; font-size: 14px; margin-top: 5px;">📝 ${record.memo}</div>` : ''}
+                </div>
+            `).join('');
+        }
+        
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                bottom: 100px;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: #27ae60;
+                color: white;
+                padding: 15px 30px;
+                border-radius: 5px;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+                z-index: 3000;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        // 音声入力のサポート
+        if ('webkitSpeechRecognition' in window) {
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = 'ja-JP';
+            recognition.continuous = false;
+            
+            document.getElementById('setInput').addEventListener('click', function() {
+                if (confirm('音声入力を使用しますか？')) {
+                    recognition.start();
+                }
+            });
+            
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('setInput').value = transcript;
+            };
+        }
+        
+        // 初期表示
+        renderHistory();
+    </script>
+</body>
+</html>
